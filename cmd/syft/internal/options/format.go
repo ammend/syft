@@ -20,6 +20,7 @@ type Format struct {
 	SPDXJSON      FormatSPDXJSON      `yaml:"spdx-json" json:"spdx-json" mapstructure:"spdx-json" description:"all spdx-json format options"`
 	CyclonedxJSON FormatCyclonedxJSON `yaml:"cyclonedx-json" json:"cyclonedx-json" mapstructure:"cyclonedx-json" description:"all cyclonedx-json format options"`
 	CyclonedxXML  FormatCyclonedxXML  `yaml:"cyclonedx-xml" json:"cyclonedx-xml" mapstructure:"cyclonedx-xml" description:"all cyclonedx-xml format options"`
+	OCTSGJSON     FormatOCTSGJSON     `yaml:"octsg-json" json:"octsg-json" mapstructure:"octsg-json" description:"all octsg-json format options"`
 }
 
 func (o *Format) PostLoad() error {
@@ -56,6 +57,7 @@ note: inherits default value from 'format.pretty' or 'false' if parent is unset`
 	descriptions.Add(&o.SPDXJSON.Pretty, prettyDescription)
 	descriptions.Add(&o.CyclonedxJSON.Pretty, prettyDescription)
 	descriptions.Add(&o.CyclonedxXML.Pretty, prettyDescription)
+	descriptions.Add(&o.OCTSGJSON.Pretty, prettyDescription)
 }
 
 func DefaultFormat() Format {
@@ -65,6 +67,7 @@ func DefaultFormat() Format {
 		SPDXJSON:      DefaultFormatSPDXJSON(),
 		CyclonedxJSON: DefaultFormatCyclonedxJSON(),
 		CyclonedxXML:  DefaultFormatCyclonedxXML(),
+		OCTSGJSON:     DefaultFormatOCTSGJSON(),
 	}
 }
 
@@ -76,6 +79,7 @@ func (o Format) Encoders() ([]sbom.FormatEncoder, error) {
 		SPDXTagValue:  spdxtagvalue.EncoderConfig{Version: format.AllVersions}, // we support multiple versions, not just a single version
 		CyclonedxJSON: o.CyclonedxJSON.config(format.AllVersions),              // we support multiple versions, not just a single version
 		CyclonedxXML:  o.CyclonedxXML.config(format.AllVersions),               // we support multiple versions, not just a single version
+		OCTSGJSON:     o.OCTSGJSON.config(format.AllVersions),
 	}.Encoders()
 }
 

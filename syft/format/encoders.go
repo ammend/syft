@@ -8,6 +8,7 @@ import (
 	"github.com/anchore/syft/syft/format/cyclonedxjson"
 	"github.com/anchore/syft/syft/format/cyclonedxxml"
 	"github.com/anchore/syft/syft/format/github"
+	"github.com/anchore/syft/syft/format/octsgjson"
 	"github.com/anchore/syft/syft/format/spdxjson"
 	"github.com/anchore/syft/syft/format/spdxtagvalue"
 	"github.com/anchore/syft/syft/format/syftjson"
@@ -26,6 +27,7 @@ type EncodersConfig struct {
 	SPDXTagValue  spdxtagvalue.EncoderConfig
 	CyclonedxJSON cyclonedxjson.EncoderConfig
 	CyclonedxXML  cyclonedxxml.EncoderConfig
+	OCTSGJSON     octsgjson.EncoderConfig
 }
 
 func Encoders() []sbom.FormatEncoder {
@@ -41,6 +43,7 @@ func DefaultEncodersConfig() EncodersConfig {
 		SPDXTagValue:  spdxtagvalue.DefaultEncoderConfig(),
 		CyclonedxJSON: cyclonedxjson.DefaultEncoderConfig(),
 		CyclonedxXML:  cyclonedxxml.DefaultEncoderConfig(),
+		OCTSGJSON:     octsgjson.DefaultEncoderConfig(),
 	}
 
 	// empty value means to support all versions
@@ -48,6 +51,7 @@ func DefaultEncodersConfig() EncodersConfig {
 	cfg.SPDXTagValue.Version = AllVersions
 	cfg.CyclonedxJSON.Version = AllVersions
 	cfg.CyclonedxXML.Version = AllVersions
+	cfg.OCTSGJSON.Version = AllVersions
 
 	return cfg
 }
@@ -67,6 +71,7 @@ func (o EncodersConfig) Encoders() ([]sbom.FormatEncoder, error) {
 	l.addWithErr(cyclonedxjson.ID)(o.cyclonedxJSONEncoders())
 	l.addWithErr(spdxjson.ID)(o.spdxJSONEncoders())
 	l.addWithErr(spdxtagvalue.ID)(o.spdxTagValueEncoders())
+	l.addWithErr(octsgjson.ID)(o.octsgJSONEncoders())
 
 	return l.encoders, l.err
 }
@@ -180,6 +185,33 @@ func (o EncodersConfig) spdxTagValueEncoders() ([]sbom.FormatEncoder, error) {
 	for _, v := range versions {
 		cfg.Version = v
 		enc, err := spdxtagvalue.NewFormatEncoderWithConfig(cfg)
+		if err != nil {
+			errs = multierror.Append(errs, err)
+		} else {
+			encs = append(encs, enc)
+		}
+	}
+	return encs, errs
+}
+
+func (o EncodersConfig) octsgJSONEncoders() ([]sbom.FormatEncoder, error) {
+	var (
+		encs []sbom.FormatEncoder
+		errs error
+	)
+
+	cfg := o.OCTSGJSON
+
+	var versions []string
+	if cfg.Version == AllVersions {
+		versions = octsgjson.SupportedVersions()
+	} else {
+		versions = []string{cfg.Version}
+	}
+
+	for _, v := range versions {
+		cfg.Version = v
+		enc, err := octsgjson.NewFormatEncoderWithConfig(cfg)
 		if err != nil {
 			errs = multierror.Append(errs, err)
 		} else {
